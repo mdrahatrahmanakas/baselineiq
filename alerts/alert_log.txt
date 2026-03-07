@@ -1,0 +1,9 @@
+2026-03-07T23:44:58.891996Z  [CRITICAL] Insider Threat Alert | User: alice.johnson | Risk Score: 0.3264 | Hour: 22:00 | Files Accessed: 600 | USB Event: No | Sensitivity: 0.91
+2026-03-07T23:44:58.892585Z  [CRITICAL] Insider Threat Alert | User: david.lee | Risk Score: 0.2742 | Hour: 14:00 | Files Accessed: 320 | USB Event: Yes | Sensitivity: 0.85
+2026-03-07T23:44:58.893045Z  [CRITICAL] Insider Threat Alert | User: bob.carter | Risk Score: 0.2577 | Hour: 02:00 | Files Accessed: 480 | USB Event: Yes | Sensitivity: 0.92
+2026-03-07T23:44:58.893451Z  [CRITICAL] Insider Threat Alert | User: bob.carter | Risk Score: 0.2561 | Hour: 03:00 | Files Accessed: 510 | USB Event: Yes | Sensitivity: 0.88
+2026-03-07T23:44:58.893857Z  [CRITICAL] Insider Threat Alert | User: carol.smith | Risk Score: 0.2422 | Hour: 01:00 | Files Accessed: 5 | USB Event: No | Sensitivity: 0.97
+2026-03-07T23:44:58.894243Z  [HIGH] Insider Threat Alert | User: carol.smith | Risk Score: 0.1814 | Hour: 12:00 | Files Accessed: 2 | USB Event: Yes | Sensitivity: 0.016
+2026-03-07T23:44:58.894587Z  [HIGH] Insider Threat Alert | User: carol.smith | Risk Score: 0.1743 | Hour: 08:00 | Files Accessed: 12 | USB Event: Yes | Sensitivity: 0.049
+2026-03-07T23:44:58.895020Z  [HIGH] Insider Threat Alert | User: emma.wilson | Risk Score: 0.1625 | Hour: 13:00 | Files Accessed: 8 | USB Event: Yes | Sensitivity: 0.184
+2026-03-07T23:44:58.895374Z  [HIGH] Insider Threat Alert | User: david.lee | Risk Score: 0.13 | Hour: 12:00 | Files Accessed: 7 | USB Event: Yes | Sensitivity: 0.048

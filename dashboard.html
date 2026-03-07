@@ -1,0 +1,858 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>BaselineIQ — Insider Threat Intelligence</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap');
+
+  :root {
+    --bg:        #0a0c0f;
+    --bg-card:   #0f1318;
+    --bg-hover:  #141820;
+    --border:    #1e2530;
+    --border-hi: #2a3545;
+    --text-1:    #e8ecf0;
+    --text-2:    #7a8a9a;
+    --text-3:    #455060;
+    --accent:    #2196f3;
+    --accent-lo: rgba(33,150,243,0.10);
+    --red:       #ef4444;
+    --red-lo:    rgba(239,68,68,0.10);
+    --orange:    #f59e0b;
+    --orange-lo: rgba(245,158,11,0.10);
+    --green:     #10b981;
+    --green-lo:  rgba(16,185,129,0.10);
+    --mono:      'IBM Plex Mono', monospace;
+    --sans:      'IBM Plex Sans', sans-serif;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--text-1);
+    font-family: var(--sans);
+    font-size: 14px;
+    line-height: 1.6;
+    min-height: 100vh;
+  }
+
+  /* ---- HEADER ---- */
+  header {
+    border-bottom: 1px solid var(--border);
+    padding: 0 32px;
+    height: 56px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    background: var(--bg);
+    z-index: 100;
+  }
+
+  .header-left {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .logo-mark {
+    width: 28px; height: 28px;
+    background: var(--accent);
+    clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
+  }
+
+  .logo-text {
+    font-family: var(--mono);
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-1);
+  }
+
+  .header-sep { width: 1px; height: 20px; background: var(--border); }
+
+  .header-subtitle {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text-3);
+    letter-spacing: 0.08em;
+  }
+
+  .status-pill {
+    font-family: var(--mono);
+    font-size: 11px;
+    padding: 4px 12px;
+    border-radius: 2px;
+    background: var(--green-lo);
+    color: var(--green);
+    border: 1px solid rgba(16,185,129,0.20);
+    letter-spacing: 0.06em;
+  }
+
+  /* ---- LAYOUT ---- */
+  main { padding: 32px; max-width: 1400px; margin: 0 auto; }
+
+  .page-title {
+    font-size: 11px;
+    font-family: var(--mono);
+    color: var(--text-3);
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    margin-bottom: 24px;
+  }
+
+  /* ---- KPI STRIP ---- */
+  .kpi-strip {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    overflow: hidden;
+    margin-bottom: 28px;
+  }
+
+  .kpi {
+    background: var(--bg-card);
+    padding: 20px 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    transition: background 0.15s;
+  }
+
+  .kpi:hover { background: var(--bg-hover); }
+
+  .kpi-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text-3);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+
+  .kpi-value {
+    font-family: var(--mono);
+    font-size: 28px;
+    font-weight: 600;
+    line-height: 1;
+  }
+
+  .kpi-value.red    { color: var(--red); }
+  .kpi-value.orange { color: var(--orange); }
+  .kpi-value.blue   { color: var(--accent); }
+  .kpi-value.green  { color: var(--green); }
+
+  .kpi-sub {
+    font-size: 12px;
+    color: var(--text-3);
+  }
+
+  /* ---- GRID ---- */
+  .grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    margin-bottom: 20px;
+  }
+
+  .grid-3 {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 20px;
+    margin-bottom: 20px;
+  }
+
+  .card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+
+  .card-header {
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .card-title {
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--text-2);
+    letter-spacing: 0.10em;
+    text-transform: uppercase;
+  }
+
+  .card-badge {
+    font-family: var(--mono);
+    font-size: 10px;
+    padding: 3px 8px;
+    border-radius: 2px;
+  }
+
+  .badge-red    { background: var(--red-lo);    color: var(--red);    border: 1px solid rgba(239,68,68,0.2); }
+  .badge-orange { background: var(--orange-lo); color: var(--orange); border: 1px solid rgba(245,158,11,0.2); }
+  .badge-blue   { background: var(--accent-lo); color: var(--accent); border: 1px solid rgba(33,150,243,0.2); }
+  .badge-green  { background: var(--green-lo);  color: var(--green);  border: 1px solid rgba(16,185,129,0.2); }
+
+  .card-body { padding: 20px; }
+
+  /* ---- CHART WRAPPERS ---- */
+  .chart-wrap { position: relative; height: 220px; }
+  .chart-wrap-tall { position: relative; height: 280px; }
+
+  /* ---- THREAT TABLE ---- */
+  .threat-table { width: 100%; border-collapse: collapse; }
+
+  .threat-table thead th {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text-3);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    text-align: left;
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--border);
+    font-weight: 500;
+  }
+
+  .threat-table tbody tr {
+    border-bottom: 1px solid var(--border);
+    transition: background 0.1s;
+  }
+
+  .threat-table tbody tr:last-child { border-bottom: none; }
+  .threat-table tbody tr:hover { background: var(--bg-hover); }
+
+  .threat-table td {
+    padding: 12px 16px;
+    font-size: 13px;
+  }
+
+  .td-mono {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--text-2);
+  }
+
+  .risk-bar-wrap {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .risk-bar-bg {
+    flex: 1;
+    height: 4px;
+    background: var(--border);
+    border-radius: 2px;
+    overflow: hidden;
+    min-width: 60px;
+  }
+
+  .risk-bar-fill {
+    height: 100%;
+    border-radius: 2px;
+    transition: width 0.6s ease;
+  }
+
+  /* ---- USER RISK CARDS ---- */
+  .user-list { display: flex; flex-direction: column; gap: 1px; background: var(--border); }
+
+  .user-row {
+    background: var(--bg-card);
+    padding: 14px 20px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    transition: background 0.15s;
+    cursor: default;
+  }
+
+  .user-row:hover { background: var(--bg-hover); }
+
+  .user-avatar {
+    width: 32px; height: 32px;
+    border-radius: 2px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 600;
+    flex-shrink: 0;
+  }
+
+  .user-info { flex: 1; min-width: 0; }
+
+  .user-name {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-1);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .user-meta {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text-3);
+    margin-top: 2px;
+  }
+
+  .user-score {
+    font-family: var(--mono);
+    font-size: 14px;
+    font-weight: 600;
+  }
+
+  /* ---- FEED ---- */
+  .feed { display: flex; flex-direction: column; max-height: 320px; overflow-y: auto; }
+
+  .feed::-webkit-scrollbar { width: 4px; }
+  .feed::-webkit-scrollbar-track { background: transparent; }
+  .feed::-webkit-scrollbar-thumb { background: var(--border-hi); border-radius: 2px; }
+
+  .feed-item {
+    padding: 12px 20px;
+    border-bottom: 1px solid var(--border);
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    gap: 12px;
+    align-items: start;
+    transition: background 0.1s;
+  }
+
+  .feed-item:hover { background: var(--bg-hover); }
+  .feed-item:last-child { border-bottom: none; }
+
+  .feed-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    margin-top: 6px;
+    flex-shrink: 0;
+  }
+
+  .feed-content { font-size: 12px; color: var(--text-2); line-height: 1.5; }
+  .feed-content strong { color: var(--text-1); font-weight: 500; }
+
+  .feed-time {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text-3);
+    white-space: nowrap;
+  }
+
+  /* ---- FOOTER ---- */
+  footer {
+    border-top: 1px solid var(--border);
+    padding: 16px 32px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 40px;
+  }
+
+  .footer-text {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text-3);
+    letter-spacing: 0.08em;
+  }
+
+  /* ---- LOADING STATE ---- */
+  #loading-state {
+    position: fixed; inset: 0;
+    background: var(--bg);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 16px;
+    z-index: 999;
+  }
+
+  .spinner {
+    width: 32px; height: 32px;
+    border: 2px solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.7s linear infinite;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .loading-text {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--text-3);
+    letter-spacing: 0.12em;
+  }
+
+  /* ---- EMPTY STATE ---- */
+  .empty-state {
+    padding: 40px 20px;
+    text-align: center;
+    font-family: var(--mono);
+    font-size: 12px;
+    color: var(--text-3);
+  }
+
+  /* ---- RESPONSIVE ---- */
+  @media (max-width: 1024px) {
+    .grid-2, .grid-3 { grid-template-columns: 1fr; }
+    .kpi-strip { grid-template-columns: repeat(2, 1fr); }
+  }
+
+  @media (max-width: 640px) {
+    main { padding: 16px; }
+    header { padding: 0 16px; }
+    .kpi-strip { grid-template-columns: 1fr 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div id="loading-state">
+  <div class="spinner"></div>
+  <div class="loading-text">LOADING RISK REPORT</div>
+</div>
+
+<header>
+  <div class="header-left">
+    <div class="logo-mark"></div>
+    <span class="logo-text">BaselineIQ</span>
+    <div class="header-sep"></div>
+    <span class="header-subtitle">Insider Threat Intelligence</span>
+  </div>
+  <div class="status-pill" id="status-pill">SYSTEM READY</div>
+</header>
+
+<main id="main-content" style="display:none">
+  <div class="page-title">BaselineIQ / Behavioral Analytics Dashboard — Risk Overview</div>
+
+  <!-- KPI Strip -->
+  <div class="kpi-strip">
+    <div class="kpi">
+      <span class="kpi-label">Total Events</span>
+      <span class="kpi-value blue" id="kpi-total">—</span>
+      <span class="kpi-sub">Activity records analyzed</span>
+    </div>
+    <div class="kpi">
+      <span class="kpi-label">Threats Detected</span>
+      <span class="kpi-value red" id="kpi-threats">—</span>
+      <span class="kpi-sub">Anomalous events flagged</span>
+    </div>
+    <div class="kpi">
+      <span class="kpi-label">Threat Rate</span>
+      <span class="kpi-value orange" id="kpi-rate">—</span>
+      <span class="kpi-sub">Percentage of total activity</span>
+    </div>
+    <div class="kpi">
+      <span class="kpi-label">Users Monitored</span>
+      <span class="kpi-value green" id="kpi-users">—</span>
+      <span class="kpi-sub">Distinct identities tracked</span>
+    </div>
+  </div>
+
+  <!-- Row 1: Scatter + Distribution -->
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title">Activity Scatter — Hour vs Files Accessed</span>
+        <span class="card-badge badge-blue">ANOMALY MAP</span>
+      </div>
+      <div class="card-body">
+        <div class="chart-wrap"><canvas id="scatterChart"></canvas></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title">Risk Score Distribution</span>
+        <span class="card-badge badge-orange">ALL EVENTS</span>
+      </div>
+      <div class="card-body">
+        <div class="chart-wrap"><canvas id="histChart"></canvas></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Row 2: User Risk + Feed -->
+  <div class="grid-3">
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title">Threat Events — Detail View</span>
+        <span class="card-badge badge-red" id="threat-count-badge">0 FLAGGED</span>
+      </div>
+      <div style="overflow-x:auto">
+        <table class="threat-table">
+          <thead>
+            <tr>
+              <th>User</th>
+              <th>Hour</th>
+              <th>Files</th>
+              <th>USB</th>
+              <th>Sensitivity</th>
+              <th>Risk Score</th>
+              <th>Level</th>
+            </tr>
+          </thead>
+          <tbody id="threat-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title">Top Risk Users</span>
+        <span class="card-badge badge-orange">BY MAX SCORE</span>
+      </div>
+      <div class="user-list" id="user-list"></div>
+    </div>
+  </div>
+
+  <!-- Row 3: User bar chart + alert feed -->
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title">Anomaly Count per User</span>
+        <span class="card-badge badge-red">FLAGGED EVENTS</span>
+      </div>
+      <div class="card-body">
+        <div class="chart-wrap-tall"><canvas id="userBarChart"></canvas></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title">Alert Feed</span>
+        <span class="card-badge badge-red" id="alert-feed-badge">LIVE</span>
+      </div>
+      <div class="feed" id="alert-feed"></div>
+    </div>
+  </div>
+</main>
+
+<footer>
+  <span class="footer-text">BaselineIQ — Insider Threat Detection Engine</span>
+  <span class="footer-text" id="report-timestamp">—</span>
+</footer>
+
+<script>
+// ─── Chart defaults ─────────────────────────────────────────────────────────
+Chart.defaults.color = '#455060';
+Chart.defaults.font.family = "'IBM Plex Mono', monospace";
+Chart.defaults.font.size = 11;
+
+const GRID_COLOR  = 'rgba(30,37,48,0.8)';
+const TEXT_MUTED  = '#455060';
+const RED         = '#ef4444';
+const ORANGE      = '#f59e0b';
+const BLUE        = '#2196f3';
+const GREEN       = '#10b981';
+
+function riskColor(score) {
+  if (score >= 0.20) return RED;
+  if (score >= 0.10) return ORANGE;
+  if (score >= 0.00) return BLUE;
+  return GREEN;
+}
+
+function riskLabel(score) {
+  if (score >= 0.20) return 'CRITICAL';
+  if (score >= 0.10) return 'HIGH';
+  if (score >= 0.00) return 'MEDIUM';
+  return 'LOW';
+}
+
+function badgeClass(level) {
+  return { CRITICAL: 'badge-red', HIGH: 'badge-orange', MEDIUM: 'badge-blue', LOW: 'badge-green' }[level] || 'badge-blue';
+}
+
+function avatarColors(name) {
+  const colors = [
+    ['#2196f3','rgba(33,150,243,0.15)'],
+    ['#10b981','rgba(16,185,129,0.15)'],
+    ['#f59e0b','rgba(245,158,11,0.15)'],
+    ['#ef4444','rgba(239,68,68,0.15)'],
+    ['#8b5cf6','rgba(139,92,246,0.15)'],
+  ];
+  let h = 0;
+  for (const c of name) h = (h * 31 + c.charCodeAt(0)) & 0xffff;
+  return colors[h % colors.length];
+}
+
+// ─── Load report ────────────────────────────────────────────────────────────
+async function loadReport() {
+  const resp = await fetch('data/risk_report.json');
+  if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+  return resp.json();
+}
+
+// ─── KPIs ────────────────────────────────────────────────────────────────────
+function renderKPIs(report) {
+  const s = report.summary;
+  document.getElementById('kpi-total').textContent   = s.total_events;
+  document.getElementById('kpi-threats').textContent = s.total_threats;
+  document.getElementById('kpi-rate').textContent    = s.threat_rate_pct + '%';
+  const users = new Set(report.all_events.map(e => e.user)).size;
+  document.getElementById('kpi-users').textContent   = users;
+}
+
+// ─── Scatter Chart ──────────────────────────────────────────────────────────
+function renderScatter(report) {
+  const normal = report.all_events.filter(e => e.anomaly_flag === 1);
+  const anomaly = report.all_events.filter(e => e.anomaly_flag === -1);
+
+  new Chart(document.getElementById('scatterChart'), {
+    type: 'scatter',
+    data: {
+      datasets: [
+        {
+          label: 'Normal',
+          data: normal.map(e => ({ x: e.hour_of_day, y: e.files_accessed })),
+          backgroundColor: 'rgba(33,150,243,0.45)',
+          pointRadius: 5,
+          pointHoverRadius: 7,
+        },
+        {
+          label: 'Anomaly',
+          data: anomaly.map(e => ({ x: e.hour_of_day, y: e.files_accessed })),
+          backgroundColor: 'rgba(239,68,68,0.75)',
+          pointRadius: 7,
+          pointHoverRadius: 9,
+          pointStyle: 'triangle',
+        },
+      ],
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { labels: { color: '#7a8a9a', boxWidth: 10, padding: 16 } },
+        tooltip: {
+          callbacks: {
+            label: ctx => ` ${ctx.dataset.label}  Hour: ${ctx.raw.x}:00  Files: ${ctx.raw.y}`
+          }
+        }
+      },
+      scales: {
+        x: { grid: { color: GRID_COLOR }, ticks: { color: TEXT_MUTED }, title: { display: true, text: 'Hour of Day', color: TEXT_MUTED } },
+        y: { grid: { color: GRID_COLOR }, ticks: { color: TEXT_MUTED }, title: { display: true, text: 'Files Accessed', color: TEXT_MUTED } },
+      }
+    }
+  });
+}
+
+// ─── Histogram ───────────────────────────────────────────────────────────────
+function renderHistogram(report) {
+  const scores = report.all_events.map(e => e.risk_score);
+  const min = Math.min(...scores);
+  const max = Math.max(...scores);
+  const bins = 12;
+  const step = (max - min) / bins;
+  const labels = [];
+  const counts = new Array(bins).fill(0);
+  const bgColors = [];
+
+  for (let i = 0; i < bins; i++) {
+    const lo = min + i * step;
+    const hi = lo + step;
+    labels.push(lo.toFixed(2));
+    counts[i] = scores.filter(s => s >= lo && s < hi).length;
+    const midScore = (lo + hi) / 2;
+    bgColors.push(riskColor(midScore) + 'cc');
+  }
+
+  new Chart(document.getElementById('histChart'), {
+    type: 'bar',
+    data: {
+      labels,
+      datasets: [{
+        label: 'Events',
+        data: counts,
+        backgroundColor: bgColors,
+        borderWidth: 0,
+        borderRadius: 2,
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { grid: { display: false }, ticks: { color: TEXT_MUTED, maxRotation: 45 } },
+        y: { grid: { color: GRID_COLOR }, ticks: { color: TEXT_MUTED } },
+      }
+    }
+  });
+}
+
+// ─── Threat Table ────────────────────────────────────────────────────────────
+function renderThreatTable(report) {
+  const threats = report.threat_events;
+  document.getElementById('threat-count-badge').textContent = `${threats.length} FLAGGED`;
+
+  const tbody = document.getElementById('threat-tbody');
+  if (!threats.length) {
+    tbody.innerHTML = `<tr><td colspan="7"><div class="empty-state">No threats detected.</div></td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = threats.map(e => {
+    const score = parseFloat(e.risk_score);
+    const level = riskLabel(score);
+    const pct   = Math.min(score / 0.35 * 100, 100).toFixed(0);
+    const col   = riskColor(score);
+    return `
+      <tr>
+        <td class="td-mono">${e.user}</td>
+        <td class="td-mono">${String(e.hour_of_day).padStart(2,'0')}:00</td>
+        <td class="td-mono">${e.files_accessed}</td>
+        <td class="td-mono">${e.usb_event ? '<span style="color:var(--orange)">YES</span>' : '<span style="color:var(--text-3)">NO</span>'}</td>
+        <td class="td-mono">${parseFloat(e.resource_sensitivity).toFixed(3)}</td>
+        <td>
+          <div class="risk-bar-wrap">
+            <div class="risk-bar-bg">
+              <div class="risk-bar-fill" style="width:${pct}%;background:${col}"></div>
+            </div>
+            <span class="td-mono" style="color:${col}">${score.toFixed(3)}</span>
+          </div>
+        </td>
+        <td><span class="card-badge ${badgeClass(level)}">${level}</span></td>
+      </tr>`;
+  }).join('');
+}
+
+// ─── User Risk List ──────────────────────────────────────────────────────────
+function renderUserList(report) {
+  const ul = document.getElementById('user-list');
+  ul.innerHTML = report.top_risky_users.map((u, i) => {
+    const col    = riskColor(u.max_risk_score);
+    const [fc, bg] = avatarColors(u.user);
+    const initials = u.user.split('.').map(s => s[0].toUpperCase()).join('');
+    return `
+      <div class="user-row">
+        <div class="user-avatar" style="background:${bg};color:${fc}">${initials}</div>
+        <div class="user-info">
+          <div class="user-name">${u.user}</div>
+          <div class="user-meta">${u.total_events} events · ${u.anomaly_count} anomalies</div>
+        </div>
+        <div class="user-score" style="color:${col}">${u.max_risk_score.toFixed(3)}</div>
+      </div>`;
+  }).join('');
+}
+
+// ─── User Bar Chart ──────────────────────────────────────────────────────────
+function renderUserBar(report) {
+  const users = report.top_risky_users;
+  const names  = users.map(u => u.user.split('.')[0]);
+  const counts = users.map(u => u.anomaly_count);
+  const cols   = users.map(u => riskColor(u.max_risk_score) + 'cc');
+
+  new Chart(document.getElementById('userBarChart'), {
+    type: 'bar',
+    data: {
+      labels: names,
+      datasets: [{
+        label: 'Anomalies',
+        data: counts,
+        backgroundColor: cols,
+        borderWidth: 0,
+        borderRadius: 3,
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      indexAxis: 'y',
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { grid: { color: GRID_COLOR }, ticks: { color: TEXT_MUTED } },
+        y: { grid: { display: false }, ticks: { color: '#7a8a9a' } },
+      }
+    }
+  });
+}
+
+// ─── Alert Feed ──────────────────────────────────────────────────────────────
+function renderFeed(report) {
+  const feed = document.getElementById('alert-feed');
+  const threats = report.threat_events;
+  document.getElementById('alert-feed-badge').textContent = `${threats.length} ALERTS`;
+
+  if (!threats.length) {
+    feed.innerHTML = `<div class="empty-state">No active alerts.</div>`;
+    return;
+  }
+
+  feed.innerHTML = threats.map(e => {
+    const score = parseFloat(e.risk_score);
+    const level = riskLabel(score);
+    const col   = riskColor(score);
+    const usb   = e.usb_event ? ' · USB detected' : '';
+    return `
+      <div class="feed-item">
+        <div class="feed-dot" style="background:${col}"></div>
+        <div class="feed-content">
+          <strong>${e.user}</strong> — ${level} activity at <strong>${String(e.hour_of_day).padStart(2,'0')}:00</strong>
+          · ${e.files_accessed} files accessed${usb}
+          · sensitivity ${parseFloat(e.resource_sensitivity).toFixed(2)}
+        </div>
+        <div class="feed-time">score<br>${parseFloat(e.risk_score).toFixed(3)}</div>
+      </div>`;
+  }).join('');
+}
+
+// ─── Bootstrap ───────────────────────────────────────────────────────────────
+async function init() {
+  try {
+    const report = await loadReport();
+
+    document.getElementById('loading-state').style.display = 'none';
+    document.getElementById('main-content').style.display  = 'block';
+    document.getElementById('report-timestamp').textContent =
+      'Report generated ' + new Date().toUTCString();
+
+    renderKPIs(report);
+    renderScatter(report);
+    renderHistogram(report);
+    renderThreatTable(report);
+    renderUserList(report);
+    renderUserBar(report);
+    renderFeed(report);
+
+    const t = report.summary.total_threats;
+    if (t > 0) {
+      document.getElementById('status-pill').textContent = `${t} ACTIVE THREATS`;
+      document.getElementById('status-pill').style.background = 'rgba(239,68,68,0.10)';
+      document.getElementById('status-pill').style.color      = 'var(--red)';
+      document.getElementById('status-pill').style.borderColor = 'rgba(239,68,68,0.20)';
+    }
+
+  } catch (err) {
+    document.getElementById('loading-state').innerHTML = `
+      <div style="font-family:var(--mono);font-size:12px;color:var(--red);text-align:center;padding:40px">
+        <div style="margin-bottom:12px">FAILED TO LOAD RISK REPORT</div>
+        <div style="color:var(--text-3)">${err.message}</div>
+        <div style="color:var(--text-3);margin-top:16px">Run main.py first, then serve this directory over HTTP.</div>
+      </div>`;
+  }
+}
+
+init();
+</script>
+</body>
+</html>
