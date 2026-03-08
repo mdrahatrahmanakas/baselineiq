@@ -144,7 +144,7 @@ def send_alert(event, level):
 
 ---
 
-## Portfolio Notes
+## Notes
 
 This project demonstrates:
 
